@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">音乐播放器</string>
+    <string name="action_contact">Contact</string>
+    <string name="random_play">随机播放</string>
+    <string name="single_play">单曲播放</string>
+    <string name="order_play">顺序播放</string>
+    <string name="like_music">喜欢歌曲</string>
+    <string name="played_music">最近播放</string>
+
+
+</resources>

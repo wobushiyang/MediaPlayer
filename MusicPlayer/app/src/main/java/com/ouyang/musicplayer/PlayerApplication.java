@@ -14,10 +14,13 @@ public class PlayerApplication extends Application {
 
     public static SharedPreferences sp;
     public static DbUtils dbUtils;
+    public static Context context;
+
     @Override
     public void onCreate() {
         super.onCreate();
         sp=getSharedPreferences(Constant.SP_NAME, Context.MODE_PRIVATE);
         dbUtils=DbUtils.create(getApplicationContext(),Constant.DB_NAME);
+        context=getApplicationContext();
     }
 }

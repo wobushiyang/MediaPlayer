@@ -3,6 +3,7 @@ package com.ouyang.musicplayer;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelUuid;
@@ -16,16 +17,33 @@ import android.widget.Toast;
 
 import com.lidroid.xutils.db.sqlite.Selector;
 import com.lidroid.xutils.exception.DbException;
+import com.ouyang.musicplayer.Utils.Constant;
+import com.ouyang.musicplayer.Utils.DownloadUtils;
 import com.ouyang.musicplayer.Utils.MediaUtils;
+import com.ouyang.musicplayer.Utils.SearchMusicUtils;
 import com.ouyang.musicplayer.adapter.MyPagerAdapter;
 import com.ouyang.musicplayer.vo.Mp3Info;
+import com.ouyang.musicplayer.vo.SearchResult;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
+
+import douzi.android.view.DefaultLrcBuilder;
+import douzi.android.view.ILrcBuilder;
+import douzi.android.view.ILrcView;
+import douzi.android.view.LrcRow;
+import douzi.android.view.LrcView;
 
 /**
  * 更新播放状态下的歌曲界面
  */
-public class PlayActivity extends BaseActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
+public class PlayActivity extends BaseActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener,ViewPager.OnPageChangeListener {
 
     private TextView textView3_title;
     private ImageView imageView1_album;
@@ -43,10 +61,12 @@ public class PlayActivity extends BaseActivity implements View.OnClickListener, 
 
     private static MyHandler myHandler;//声明个MyHandler，然后在onCreate里面赋值
 
-    private static final int UPDATE_TIME = 0x1;//更新播放时间的标记
+    private static final int UPDATE_TIME = 0x10;//更新播放时间的标记
+    private static final int UPDATE_LRC= 0x20;//更新歌词
 
 
     private ViewPager viewPager;
+    private LrcView lrcView;
     private ArrayList<View> viewList = new ArrayList<>();
 
     private PlayerApplication app;
@@ -98,9 +118,25 @@ public class PlayActivity extends BaseActivity implements View.OnClickListener, 
         imageView1_album = (ImageView) album_image_layout.findViewById(R.id.imageView1_album);
 
         viewList.add(album_image_layout);
+
+        lrcView= (LrcView) lrc_layout.findViewById(R.id.lrcView);
+        //设置滚动事件
+        lrcView.setListener(new ILrcView.LrcViewListener() {
+            @Override
+            public void onLrcSeeked(int newPosition, LrcRow row) {
+                //判断是否在播放，然后拖到哪个位置播放
+                if(playService.isPlaying()){
+                    playService.seekTo((int) row.time);
+                }
+            }
+        });
+        lrcView.setLoadingTipText("正在加载歌词");
+        lrcView.setBackgroundResource(R.drawable.jb_bg);//背景图
+        lrcView.getBackground().setAlpha(150);//设置透明度
         viewList.add(lrc_layout);
 
         viewPager.setAdapter(new MyPagerAdapter(viewList));
+        viewPager.addOnPageChangeListener(this);
 
     }
 
@@ -142,6 +178,40 @@ public class PlayActivity extends BaseActivity implements View.OnClickListener, 
     public void onStopTrackingTouch(SeekBar seekBar) {
     }
 
+    //加载歌词
+    private void loadLRC(File lrcFile) {
+        StringBuffer buf = new StringBuffer(1024 * 10);
+        char[] chars = new char[1024];
+
+        try {
+            BufferedReader in = new BufferedReader((new InputStreamReader(new FileInputStream(lrcFile))));
+            int len = -1;
+            while ((len = in.read(chars)) != -1) {
+                buf.append(chars, 0, len);
+            }
+            in.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ILrcBuilder builder = new DefaultLrcBuilder();
+        List<LrcRow> rows = builder.getLrcRows(buf.toString());
+        lrcView.setLrc(rows);
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+    }
+
 
     static class MyHandler extends Handler {
         private PlayActivity playActivity;
@@ -156,8 +226,20 @@ public class PlayActivity extends BaseActivity implements View.OnClickListener, 
             if (null != playActivity) {
                 switch (msg.what) {
                     case UPDATE_TIME:
-                        playActivity.textView1_start_time.setText(MediaUtils.formatTime(msg.arg1));
+                        playActivity.textView1_start_time.setText(MediaUtils.formatTime((int) msg.obj));
                         break;
+                    case UPDATE_LRC:
+                        playActivity.lrcView.seekLrcToTime((int) msg.obj);
+                        break;
+                    case DownloadUtils.SUCCESS_LRC:
+                        playActivity.loadLRC(new File((String) msg.obj));
+                        break;
+                    case DownloadUtils.FAILED_LRC:
+                        Toast.makeText(playActivity,"下载歌词失败",Toast.LENGTH_LONG).show();
+                        break;
+                    default:
+                        break;
+
                 }
             }
         }
@@ -171,10 +253,11 @@ public class PlayActivity extends BaseActivity implements View.OnClickListener, 
     @Override
     public void publish(int progress) {
         //*textView1_start_time.setText(MediaUtils.formatTime(progress));//不能直接调用这个线程，需要使用Handler
-        Message msg = myHandler.obtainMessage(UPDATE_TIME);
-        msg.arg1 = progress;//将progress传给msg.arg1
-        myHandler.sendMessage(msg);//传送个UPDATE_TIME给handleMessage
+
+        myHandler.obtainMessage(UPDATE_TIME,progress).sendToTarget();
         seekBar1.setProgress(progress);//seekbar内部组件做了处理，可以直接调用设置
+
+        myHandler.obtainMessage(UPDATE_LRC,progress).sendToTarget();
 
     }
 
@@ -216,13 +299,31 @@ public class PlayActivity extends BaseActivity implements View.OnClickListener, 
         //初始化收藏状态
         try {
             Mp3Info likeMp3Info = app.dbUtils.findFirst(Selector.from(Mp3Info.class).where("mp3InfoId", "=",mp3Info.getMp3InfoId()));
-            if (null != likeMp3Info) {
+            if (null != likeMp3Info && likeMp3Info.getIsLike()==1) {
                 imageView_favorite.setImageResource(R.mipmap.xin_hong);
             } else {
                 imageView_favorite.setImageResource(R.mipmap.xin_bai);
             }
         } catch (DbException e) {
             e.printStackTrace();
+        }
+
+        //歌词
+        String songName = mp3Info.getTitle();
+        String lrcPath = Environment.getExternalStorageDirectory() + Constant.DIR_LRC + "/" + songName + ".lrc";
+        File lrcFile = new File(lrcPath);
+        if (!lrcFile.exists()) {
+            //下载
+            SearchMusicUtils.getInstance().setListener(new SearchMusicUtils.OnSearchResultListener() {
+                @Override
+                public void onSearchResult(ArrayList<SearchResult> results) {
+                    SearchResult searchResult = results.get(0);
+                    String url = Constant.BAIDU_URL + searchResult.getUrl();
+                    DownloadUtils.getInstance().downloadLRC(url, searchResult.getMusicName(), myHandler);
+                }
+            }).search(songName +" "+ mp3Info.getArtist(),1);
+        } else {
+            loadLRC(lrcFile);
         }
     }
 

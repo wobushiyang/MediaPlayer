@@ -29,7 +29,6 @@ public class SplashActivity extends Activity {
         handler.sendEmptyMessageDelayed(START_ACTIVITY,3000);
 
     }
-
         private Handler handler=new Handler(){
             @Override
             public void handleMessage(Message msg) {
@@ -42,6 +41,4 @@ public class SplashActivity extends Activity {
                 }
             }
         };
-
-
 }

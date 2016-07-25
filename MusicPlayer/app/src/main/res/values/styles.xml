@@ -12,4 +12,14 @@
         <item name="android:background">#FF666666</item>
     </style>
 
+
+    <style name="AppTheme2" parent="AppBaseTheme">
+        <item name="android:windowBackground">@color/background_window</item>
+        <item name="android:actionBarStyle">@style/ActionBarStyle.BlueActionBarStyle</item>
+    </style>
+
+    <style name="ActionBarStyle.BlueActionBarStyle" parent="ActionBarStyle">
+        <item name="android:background">#FF3F9FE0</item>
+    </style>
+
 </resources>

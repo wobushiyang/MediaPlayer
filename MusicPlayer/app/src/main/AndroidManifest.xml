@@ -3,7 +3,7 @@
     package="com.ouyang.musicplayer">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />//网络请求的权限
 
     <application
         android:name=".PlayerApplication"
@@ -24,15 +24,15 @@
         </activity>
         <activity android:name=".MainActivity" />
         <activity android:name=".PlayActivity"/>
-        <activity android:name=".MyLikeMusicListActivity"/>
-        <activity android:name=".PlayRecordListActivity"/>
+        <activity android:name=".MyLikeMusicListActivity" android:label="@string/like_music"
+            android:theme="@style/AppTheme2"/>
+        <activity android:name=".PlayRecordListActivity" android:label="@string/played_music"
+            android:theme="@style/AppTheme2"/>
 
         <service
             android:name=".PlayService"
             android:enabled="true"
             android:exported="true" />
-
-
     </application>
 
 </manifest>

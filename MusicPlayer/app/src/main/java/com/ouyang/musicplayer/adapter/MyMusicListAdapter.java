@@ -7,16 +7,19 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.andraskindler.quickscroll.Scrollable;
 import com.ouyang.musicplayer.R;
 import com.ouyang.musicplayer.Utils.MediaUtils;
 import com.ouyang.musicplayer.vo.Mp3Info;
 
 import java.util.ArrayList;
 
+
+
 /**
  * Created by ASUS-PC on 2016/7/1.
  */
-public class MyMusicListAdapter extends BaseAdapter {
+public class MyMusicListAdapter extends BaseAdapter implements Scrollable {
     private Context ctx;
     private ArrayList<Mp3Info> mp3Infos;
     public MyMusicListAdapter(Context ctx, ArrayList<Mp3Info> mp3Infos){
@@ -60,6 +63,18 @@ public class MyMusicListAdapter extends BaseAdapter {
         vh.textView2_singer.setText(mp3Info.getArtist());
         vh.textView3_time.setText(MediaUtils.formatTime(mp3Info.getDuration()));
         return convertView;
+    }
+
+    //提供滑到歌曲的内容,第一个字
+    @Override
+    public String getIndicatorForPosition(int childposition, int groupposition) {
+        return Character.toString(mp3Infos.get(childposition).getTitle().charAt(0));
+    }
+
+    //滑到的位置
+    @Override
+    public int getScrollPosition(int childposition, int groupposition) {
+        return childposition;
     }
 
     static class ViewHolder{

@@ -3,15 +3,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ListView
-        android:id="@+id/listView_my_music"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
         android:layout_above="@+id/linearLayout1"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true" />
+        >
 
+
+        <ListView
+            android:id="@+id/listView_my_music"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="10dp"
+            android:overScrollMode="never"
+            android:scrollbars="none"
+            />
+
+        <com.andraskindler.quickscroll.QuickScroll
+            android:id="@+id/quickscroll"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:paddingLeft="5dp"
+            android:layout_alignTop="@+id/listView_my_music"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            />
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/linearLayout1"

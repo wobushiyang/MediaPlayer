@@ -37,6 +37,8 @@ import android.view.View;
 
 import com.astuetz.PagerSlidingTabStrip;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 public class MainActivity extends BaseActivity {
 
 	private final Handler handler = new Handler();
@@ -86,11 +88,11 @@ public class MainActivity extends BaseActivity {
 		//切换状态播放位置
 		if(pager.getCurrentItem()==0){
 			myMusicListFragment.loadData();
-			myMusicListFragment.changeUIStatusOnPlay(position);
+			//myMusicListFragment.changeUIStatusOnPlay(position);
 		}else if(pager.getCurrentItem()==1){
 
 		}
-
+		myMusicListFragment.changeUIStatusOnPlay(position);
 	}
 
 	@Override
@@ -110,6 +112,10 @@ public class MainActivity extends BaseActivity {
 			case R.id.played_music:
 				Intent it=new Intent(this,PlayRecordListActivity.class);
 				startActivity(it);
+				break;
+			case R.id.exit:
+				stopService(new Intent(this,PlayService.class));
+				finish();
 				break;
 			default:
 				break;
@@ -138,7 +144,6 @@ public class MainActivity extends BaseActivity {
 				}
 
 			} else {
-
 				TransitionDrawable td = new TransitionDrawable(new Drawable[] { oldBackground, ld });
 
 				// workaround for broken ActionBarContainer drawable handling on

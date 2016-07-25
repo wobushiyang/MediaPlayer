@@ -167,6 +167,9 @@ public class PlayService extends Service implements MediaPlayer.OnCompletionList
             ex.shutdown();
             ex = null;
         }
+        mPlayer=null;
+        mp3Infos=null;
+        musicUpdateListener=null;
     }
 
 

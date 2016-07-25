@@ -49,7 +49,7 @@ public class MyLikeMusicListActivity extends BaseActivity implements AdapterView
 
     private void initData() {
         try {
-            List<Mp3Info> list = app.dbUtils.findAll(Selector.from(Mp3Info.class).where("isLike", "=", "1"));
+            List<Mp3Info> list = app.dbUtils.findAll(Selector.from(Mp3Info.class).where("isLike", "=", 1));
             if (null == list || list.size() == 0) {
                 return;
             }
@@ -96,14 +96,9 @@ public class MyLikeMusicListActivity extends BaseActivity implements AdapterView
             } else {
                 mp3Info.setPlayTime(System.currentTimeMillis());
                 app.dbUtils.update(playRecordMp3Info, "playTime");
-
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
-
-
 }

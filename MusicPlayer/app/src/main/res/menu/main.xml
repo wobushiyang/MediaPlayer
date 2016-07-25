@@ -7,4 +7,8 @@
         android:id="@+id/played_music"
         android:title="@string/played_music"/>
 
+    <item
+        android:id="@+id/exit"
+        android:title="@string/exit"/>
+
 </menu>
